@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/dankru/Auth_service/internal/auth"
+	"github.com/dankru/Auth_service/internal/service/auth"
 	authpb "github.com/dankru/proto-definitions/pkg/auth"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"os"
 )
 
 func main() {
@@ -14,10 +15,10 @@ func main() {
 		log.Fatalf("failed to listen: %s", err.Error())
 	}
 
-	s := auth.Server{}
+	s := auth.NewAuthServer([]byte(os.Getenv("HMAC_SECRET")))
 	grpcServer := grpc.NewServer()
 
-	authpb.RegisterTokenServiceServer(grpcServer, &s)
+	authpb.RegisterTokenServiceServer(grpcServer, s)
 	log.Printf("serving")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err.Error())

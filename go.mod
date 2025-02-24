@@ -5,6 +5,7 @@ go 1.23.4
 require github.com/dankru/proto-definitions v0.1.0
 
 require (
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
