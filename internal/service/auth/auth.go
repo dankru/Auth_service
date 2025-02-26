@@ -92,12 +92,16 @@ func (s *Server) ParseToken(ctx context.Context, token *authpb.TokenRequest) (*a
 		return &authpb.UserData{Id: 0}, errors.New("invalid claims")
 	}
 
-	subject, ok := claims["sub"].(int64)
+	subject, ok := claims["sub"].(string)
 	if !ok {
 		return &authpb.UserData{Id: 0}, errors.New("Invalid subject")
 	}
 
-	return &authpb.UserData{Id: subject}, nil
+	id, err := strconv.Atoi(subject)
+	if err != nil {
+		return &authpb.UserData{Id: 0}, errors.New("invalid subject")
+	}
+	return &authpb.UserData{Id: int64(id)}, nil
 }
 
 func newRefreshToken() (string, error) {
