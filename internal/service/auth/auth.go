@@ -33,7 +33,7 @@ func NewAuthServer(hmac []byte) *Server {
 
 func (s *Server) GenerateToken(ctx context.Context, userData *authpb.UserData) (*authpb.JWT, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Subject:   userData.Id,
+		Subject:   strconv.Itoa(int(userData.Id)),
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Hour * 15).Unix(),
 	})
@@ -54,15 +54,8 @@ func (s *Server) GenerateToken(ctx context.Context, userData *authpb.UserData) (
 		}, err
 	}
 
-	userId, err := strconv.ParseInt(userData.Id, 10, 64)
-	if err != nil {
-		return &authpb.JWT{
-			AccessToken:  "",
-			RefreshToken: "",
-		}, err
-	}
 	if err := s.sessionsRepository.Create(domain.RefreshSession{
-		UserID:    userId,
+		UserID:    userData.Id,
 		Token:     refreshToken,
 		ExpiresAt: time.Now().Add(time.Hour * 24 * 30),
 	}); err != nil {
@@ -87,29 +80,24 @@ func (s *Server) ParseToken(ctx context.Context, token *authpb.TokenRequest) (*a
 	})
 
 	if err != nil {
-		return &authpb.UserData{Id: "0"}, err
+		return &authpb.UserData{Id: 0}, err
 	}
 
 	if !t.Valid {
-		return &authpb.UserData{Id: "0"}, errors.New("invalid token")
+		return &authpb.UserData{Id: 0}, errors.New("invalid token")
 	}
 
 	claims, ok := t.Claims.(jwt.MapClaims)
 	if !ok {
-		return &authpb.UserData{Id: "0"}, errors.New("invalid claims")
+		return &authpb.UserData{Id: 0}, errors.New("invalid claims")
 	}
 
-	subject, ok := claims["sub"].(string)
+	subject, ok := claims["sub"].(int64)
 	if !ok {
-		return &authpb.UserData{Id: "0"}, errors.New("Invalid subject")
+		return &authpb.UserData{Id: 0}, errors.New("Invalid subject")
 	}
 
-	id, err := strconv.Atoi(subject)
-	if err != nil {
-		return &authpb.UserData{Id: "0"}, errors.New("invalid subject")
-	}
-
-	return &authpb.UserData{Id: strconv.Itoa(id)}, nil
+	return &authpb.UserData{Id: subject}, nil
 }
 
 func newRefreshToken() (string, error) {
