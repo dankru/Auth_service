@@ -7,6 +7,8 @@ import (
 	"github.com/dankru/Auth_service/internal/domain"
 	authpb "github.com/dankru/proto-definitions/pkg/auth"
 	"github.com/golang-jwt/jwt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"math/rand"
 	"strconv"
 	"time"
@@ -80,9 +82,8 @@ func (s *Server) ParseToken(ctx context.Context, token *authpb.TokenRequest) (*a
 	})
 
 	if err != nil {
-		return &authpb.UserData{Id: 0}, err
+		return &authpb.UserData{Id: 0}, status.Errorf(codes.Unauthenticated, "Token is expired")
 	}
-
 	if !t.Valid {
 		return &authpb.UserData{Id: 0}, errors.New("invalid token")
 	}
