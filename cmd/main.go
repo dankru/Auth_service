@@ -10,7 +10,7 @@ import (
 func main() {
 	authServer := auth.NewAuthServer([]byte(os.Getenv("HMAC_SECRET")))
 
-	srv := server.NewServer("tcp", ":9000", authServer)
+	srv := server.NewServer("tcp", ":8081", authServer)
 	if err := srv.Run(); err != nil {
 		log.Fatal("failed to run: %s", err.Error())
 	}
