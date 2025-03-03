@@ -3,8 +3,10 @@ module github.com/dankru/Auth_service
 go 1.23.4
 
 require (
+	github.com/dankru/Commissions_simple v0.0.0-20250222142006-a8afb246c6f0
 	github.com/dankru/proto-definitions v0.1.1-0.20250226165221-f4c480dca07e
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/lib/pq v1.10.9
 	github.com/spf13/viper v1.19.0
 	google.golang.org/grpc v1.70.0
 )

@@ -7,6 +7,7 @@ import (
 	"github.com/dankru/Auth_service/internal/domain"
 	authpb "github.com/dankru/proto-definitions/pkg/auth"
 	"github.com/golang-jwt/jwt"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"math/rand"
@@ -17,19 +18,19 @@ import (
 type Server struct {
 	authpb.UnimplementedTokenServiceServer
 	hmacSecret         []byte
-	sessionsRepository SessionsRepository
+	sessionsRepository TokensRepository
 }
 
-type SessionsRepository interface {
+type TokensRepository interface {
 	Create(token domain.RefreshSession) error
 	Get(token string) (domain.RefreshSession, error)
 }
 
-func NewAuthServer(hmac []byte) *Server {
+func NewAuthServer(hmac []byte, repository TokensRepository) *Server {
 	return &Server{
 		UnimplementedTokenServiceServer: authpb.UnimplementedTokenServiceServer{},
 		hmacSecret:                      hmac,
-		sessionsRepository:              nil,
+		sessionsRepository:              repository,
 	}
 }
 
@@ -39,7 +40,6 @@ func (s *Server) GenerateToken(ctx context.Context, userData *authpb.UserData) (
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Hour * 15).Unix(),
 	})
-
 	accessToken, err := t.SignedString(s.hmacSecret)
 	if err != nil {
 		return &authpb.JWT{
@@ -55,7 +55,6 @@ func (s *Server) GenerateToken(ctx context.Context, userData *authpb.UserData) (
 			RefreshToken: "",
 		}, err
 	}
-
 	if err := s.sessionsRepository.Create(domain.RefreshSession{
 		UserID:    userData.Id,
 		Token:     refreshToken,
