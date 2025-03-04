@@ -104,6 +104,19 @@ func (s *Server) ParseToken(ctx context.Context, token *authpb.TokenRequest) (*a
 	return &authpb.UserData{Id: int64(id)}, nil
 }
 
+func (s *Server) RefreshToken(ctx context.Context, token *authpb.TokenRequest) (*authpb.JWT, error) {
+	session, err := s.sessionsRepository.Get(token.Token)
+	if err != nil {
+		return &authpb.JWT{}, err
+	}
+
+	if session.ExpiresAt.Unix() < time.Now().Unix() {
+		return &authpb.JWT{}, errors.New("refresh token has expired")
+	}
+
+	return s.GenerateToken(ctx, &authpb.UserData{Id: session.UserID})
+}
+
 func newRefreshToken() (string, error) {
 	b := make([]byte, 32)
 

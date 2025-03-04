@@ -21,5 +21,14 @@ func (r *TokensRepository) Create(token domain.RefreshSession) error {
 }
 
 func (r *TokensRepository) Get(token string) (domain.RefreshSession, error) {
-	return domain.RefreshSession{}, nil
+	var t domain.RefreshSession
+	err := r.db.QueryRow("SELECT id, user_id, token, expires_at FROM refresh_tokens WHERE token=$1", token).
+		Scan(&t.ID, &t.UserID, &t.Token, &t.ExpiresAt)
+	if err != nil {
+		return t, err
+	}
+
+	_, err = r.db.Exec("DELETE FROM refresh_tokens WHERE user_id=$1", t.UserID)
+
+	return t, err
 }
